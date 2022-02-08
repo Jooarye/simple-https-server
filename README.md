@@ -2,8 +2,10 @@
 This is a project, created to prove that writing an HTTP(S) Server is not the hardest in the world!
 
 ## Prerequisites
+These are some libraries you'll need in order to build this project.
 - `libthread`
 - `libssl`
+- `libjsoncpp`
 
 ## Generating a certificate
 ```bash

@@ -40,8 +40,6 @@ public:
 
   std::vector<HTTPHeader> headers;
   std::string body;
-
-  void setHeader(std::string, std::string);
 };
 
 enum HTTPResponseCode {
@@ -119,7 +117,7 @@ public:
 
 class HTTPHandler {
 public:
-  virtual void handleRequest(HTTPRequest &, HTTPResponse &);
+  virtual void handleRequest(HTTPRequest &, HTTPResponse &) = 0;
 
   void handleNotFound(HTTPRequest &, HTTPResponse &);
 };
