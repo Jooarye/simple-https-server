@@ -215,7 +215,7 @@ void HTTPRouter::handleRequest(HTTPRequest &req, HTTPResponse &res) {
     }
   }
 
-  this->handleNotFound(req, res);
+  HTTPHandler::handleNotFound(req, res);
 }
 
 void HTTPRouter::addRoute(std::string path, HTTPHandler *handler) {
@@ -321,14 +321,14 @@ void HTTPServer::handleClient(int client) {
 
   bool success = this->readRequest(client, req);
 
-  LOGGER.log("%a <%n %s %s - %s\n", clientNum,
+  LOGGER.log("%a %n< %s %s - %s\n", clientNum,
              getMethodName(req.method).c_str(), req.resource.c_str(), ip);
 
   if (success) {
     this->handler->handleRequest(req, res);
     this->writeResponse(client, res);
 
-    LOGGER.log("%a >%n %i %s %n- %s\n", clientNum, res.code,
+    LOGGER.log("%a %n> %i %s %n- %s\n", clientNum, res.code,
                getResponseName(res.code).c_str(), ip);
 
   } else {

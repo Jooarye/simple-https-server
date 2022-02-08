@@ -4,7 +4,7 @@
 #include "logger.h"
 
 int main(int argc, char *argv[]) {
-  HTTPSServer server("RootCA.crt", "RootCA.key", "0.0.0.0", 1337, 16);
+  HTTPSServer server("RootCA.crt", "RootCA.key", "127.0.0.1", 1337, 16);
 
   HTTPRouter router;
 
