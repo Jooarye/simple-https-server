@@ -321,10 +321,10 @@ void HTTPServer::handleClient(int client) {
 
   bool success = this->readRequest(client, req);
 
-  LOGGER.log("%a %n< %s %s - %s\n", clientNum,
-             getMethodName(req.method).c_str(), req.resource.c_str(), ip);
-
   if (success) {
+    LOGGER.log("%a %n< %s %s - %s\n", clientNum,
+               getMethodName(req.method).c_str(), req.resource.c_str(), ip);
+
     this->handler->handleRequest(req, res);
     this->writeResponse(client, res);
 
