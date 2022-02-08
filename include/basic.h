@@ -7,7 +7,7 @@
 class BasicFileHandler : public HTTPHandler {
 public:
   void handleRequest(HTTPRequest &req, HTTPResponse &res) {
-    std::string path = "www" + req.resource;
+    std::string path = "www/" + req.resource;
     FILE *input_file = fopen(path.c_str(), "r");
 
     if (input_file == nullptr) {

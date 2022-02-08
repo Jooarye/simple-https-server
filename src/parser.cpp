@@ -230,7 +230,7 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
       break;
     }
     case 22:
-      req.body += input;
+      req.body.push_back(input);
       break;
     default:
       return false;

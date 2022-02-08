@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
   router.addRoute("/day", &handler1);
   router.addRoute("/night", &handler2);
-  router.addRoute("/static", &fileHandler);
+  router.addRoute("/static/", &fileHandler);
 
   server.setHandler(&router);
   server.serveForever();

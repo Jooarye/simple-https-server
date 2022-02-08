@@ -205,8 +205,11 @@ void HTTPHandler::handleNotFound(HTTPRequest &req, HTTPResponse &res) {
 
 void HTTPRouter::handleRequest(HTTPRequest &req, HTTPResponse &res) {
   for (std::pair<std::string, HTTPHandler *> pair : this->handlers) {
-    if (req.resource.starts_with(pair.first)) {
-      req.resource.erase(0, pair.first.length());
+    if (pair.first.back() == '/' && req.resource.starts_with(pair.first)) {
+      req.resource.erase(0, pair.first.length() - 1);
+      pair.second->handleRequest(req, res);
+      return;
+    } else if (req.resource == pair.first) {
       pair.second->handleRequest(req, res);
       return;
     }
