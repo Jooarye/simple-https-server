@@ -36,7 +36,6 @@ void HTTPSServer::serveForever() {
     // handle request
     SSL *client = this->acceptConnection();
     if (client == nullptr) {
-      SSL_shutdown(client);
       SSL_free(client);
       continue;
     }
@@ -58,7 +57,6 @@ void HTTPSServer::serveOnce() {
   // handle request
   SSL *client = this->acceptConnection();
   if (client == nullptr) {
-    SSL_shutdown(client);
     SSL_free(client);
     this->closeSocket();
 
@@ -187,9 +185,14 @@ bool HTTPSServer::readRequest(SSL *client, HTTPRequest &req) {
   char *buffer = (char *)malloc(4096);
   memset(buffer, 0, 4096);
 
-  SSL_read(client, buffer, 4096);
+  if (SSL_read(client, buffer, 4096) <= 0) {
+    free(buffer);
+    return false;
+  }
 
-  return parseHttpRequest(buffer, req);
+  bool ret = parseHttpRequest(buffer, req);
+  free(buffer);
+  return ret;
 }
 
 void HTTPSServer::writeResponse(SSL *client, HTTPResponse &res) {

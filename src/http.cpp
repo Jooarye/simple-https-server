@@ -319,9 +319,7 @@ void HTTPServer::handleClient(int client) {
   char ip[INET_ADDRSTRLEN];
   getIpAddr(client, ip);
 
-  bool success = this->readRequest(client, req);
-
-  if (success) {
+  if (this->readRequest(client, req)) {
     LOGGER.log("%a %n< %s %s - %s\n", clientNum,
                getMethodName(req.method).c_str(), req.resource.c_str(), ip);
 
@@ -344,7 +342,9 @@ bool HTTPServer::readRequest(int client, HTTPRequest &req) {
 
   read(client, buffer, 4096);
 
-  return parseHttpRequest(buffer, req);
+  bool ret = parseHttpRequest(buffer, req);
+  free(buffer);
+  return ret;
 }
 
 void HTTPServer::writeResponse(int client, HTTPResponse &res) {
