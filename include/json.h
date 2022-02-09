@@ -9,6 +9,7 @@ public:
   int major, minor;
 
   std::vector<HTTPHeader> headers;
+  std::vector<HTTPParam> params;
   Json::Value body;
   bool parsingSuccessfull;
 

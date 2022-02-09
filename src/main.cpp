@@ -13,7 +13,10 @@ public:
     res.body["age"] = 22;
     res.body["city"] = "Berlin";
     res.body["occupation"] = "Computer Sience Student";
-    res.body["parents"].append("abc");
+
+    for (HTTPParam &param : req.params) {
+      res.body["test"][param.name] = param.value;
+    }
 
     res.code = HTTP_OK;
   }

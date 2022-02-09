@@ -42,136 +42,175 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
 
   std::string method;
 
-  int state = 1;
+  int state = PARSING_BEGIN;
   while (begin != end) {
     char input = *begin++;
 
     switch (state) {
-    case 1:
+    case PARSING_BEGIN:
       if (!isChar(input) || isControl(input) || isSpecial(input)) {
         return false;
       } else {
-        state = 2;
+        state = PARSING_METHOD;
         method.push_back(input);
       }
       break;
-    case 2:
+    case PARSING_METHOD:
       if (input == ' ') {
         req.method = getMethod(method);
         if (req.method == HTTP_NONE)
           return true;
-        state = 3;
+        state = PARSING_RESOURCE_BEGIN;
       } else if (!isChar(input) || isControl(input) || isSpecial(input)) {
         return false;
       } else {
         method.push_back(input);
       }
       break;
-    case 3:
+    case PARSING_RESOURCE_BEGIN:
       if (isControl(input)) {
         return false;
       } else {
-        state = 4;
+        state = PARSING_RESOURCE;
         req.resource.push_back(input);
       }
       break;
-    case 4:
+    case PARSING_RESOURCE:
       if (input == ' ') {
-        state = 5;
+        state = PARSING_VERSION_H;
+      } else if (input == '?') {
+        state = PARSING_PARAMS_BEGIN;
       } else if (input == '\r') {
         req.major = 0;
         req.minor = 9;
 
-        return false;
+        return true;
       } else if (isControl(input)) {
         return false;
       } else {
         req.resource.push_back(input);
       }
       break;
-    case 5:
+    case PARSING_PARAMS_BEGIN:
+      if (isControl(input)) {
+        return false;
+      } else if (input == ' ') {
+        state = PARSING_VERSION_H;
+      } else {
+        req.params.push_back(HTTPParam());
+        req.params.back().name.reserve(16);
+        req.params.back().value.reserve(16);
+        req.params.back().name.push_back(input);
+        state = PARSING_PARAMS_NAME;
+      }
+      break;
+    case PARSING_PARAMS_NAME:
+      if (input == '=') {
+        state = PARSING_PARAMS_VALUE;
+      } else if (input == '&') {
+        state = PARSING_PARAMS_BEGIN;
+      } else if (input == ' ') {
+        state = PARSING_VERSION_H;
+      } else if (isControl(input)) {
+        return false;
+      } else {
+        req.params.back().name.push_back(input);
+      }
+      break;
+    case PARSING_PARAMS_VALUE:
+      if (input == '&') {
+        state = PARSING_PARAMS_BEGIN;
+      } else if (input == ' ') {
+        state = PARSING_VERSION_H;
+      } else if (isControl(input)) {
+        return false;
+      } else {
+        req.params.back().value.push_back(input);
+      }
+      break;
+    case PARSING_VERSION_H:
       if (input == 'H') {
-        state = 6;
+        state = PARSING_VERSION_HT;
       } else {
         return false;
       }
       break;
-    case 6:
+    case PARSING_VERSION_HT:
       if (input == 'T') {
-        state = 7;
+        state = PARSING_VERSION_HTT;
       } else {
         return false;
       }
       break;
-    case 7:
+    case PARSING_VERSION_HTT:
       if (input == 'T') {
-        state = 8;
+        state = PARSING_VERSION_HTTP;
       } else {
         return false;
       }
       break;
-    case 8:
+    case PARSING_VERSION_HTTP:
       if (input == 'P') {
-        state = 9;
+        state = PARSING_VERSION_HTTPS;
       } else {
         return false;
       }
       break;
-    case 9:
+    case PARSING_VERSION_HTTPS:
       if (input == '/') {
         req.major = 0;
         req.minor = 0;
-        state = 10;
+        state = PARSING_VERSION_MAJOR;
       } else {
         return false;
       }
       break;
-    case 10:
+    case PARSING_VERSION_MAJOR:
       if (isDigit(input)) {
         req.major = input - '0';
-        state = 11;
+        state = PARSING_VERSION_MAJOR_LONG;
       } else {
         return false;
       }
       break;
-    case 11:
+    case PARSING_VERSION_MAJOR_LONG:
       if (input == '.') {
-        state = 12;
+        state = PARSING_VERSION_MINOR;
       } else if (isDigit(input)) {
         req.major = req.major * 10 + input - '0';
       } else {
         return false;
       }
       break;
-    case 12:
+    case PARSING_VERSION_MINOR:
       if (isDigit(input)) {
         req.minor = input - '0';
-        state = 13;
+        state = PARSING_VERSION_MINOR_LONG;
       } else {
         return false;
       }
       break;
-    case 13:
+    case PARSING_VERSION_MINOR_LONG:
       if (input == '\r') {
-        state = 14;
+        state = PARSING_NEW_LINE;
       } else if (isDigit(input)) {
         req.minor = req.minor * 10 + input - '0';
       } else {
         return false;
       }
       break;
-    case 14:
+    case PARSING_NEW_LINE:
       if (input == '\n') {
-        state = 15;
+        state = PARSING_HEADER_BEGIN;
       } else {
         return false;
       }
       break;
-    case 15:
+    case PARSING_HEADER_BEGIN:
       if (input == '\r') {
-        state = 16;
+        state = PARSING_BODY_BEGIN;
       } else if (!req.headers.empty() && (input == ' ' || input == '\t')) {
-        state = 17;
+        state = PARSING_HEADER_SKIP;
       } else if (!isChar(input) || isControl(input) || isSpecial(input)) {
         return false;
       } else {
@@ -179,12 +218,12 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
         req.headers.back().name.reserve(16);
         req.headers.back().value.reserve(16);
         req.headers.back().name.push_back(input);
-        state = 18;
+        state = PARSING_HEADER_NAME;
       }
       break;
-    case 17:
+    case PARSING_HEADER_SKIP:
       if (input == '\r') {
-        state = 19;
+        state = PARSING_HEADER_END;
       } else if (input == ' ' || input == '\t') {
       } else if (isControl(input)) {
         return false;
@@ -193,43 +232,43 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
         req.headers.back().value.push_back(input);
       }
       break;
-    case 18:
+    case PARSING_HEADER_NAME:
       if (input == ':') {
-        state = 20;
+        state = PARSING_HEADER_SEPERATOR;
       } else if (!isChar(input) || isControl(input) || isSpecial(input)) {
         return false;
       } else {
         req.headers.back().name.push_back(input);
       }
       break;
-    case 20:
+    case PARSING_HEADER_SEPERATOR:
       if (input == ' ') {
-        state = 21;
+        state = PARSING_HEADER_VALUE;
       } else {
         return false;
       }
       break;
-    case 21:
+    case PARSING_HEADER_VALUE:
       if (input == '\r') {
-        state = 19;
+        state = PARSING_HEADER_END;
       } else if (isControl(input)) {
         return false;
       } else {
         req.headers.back().value.push_back(input);
       }
       break;
-    case 19:
+    case PARSING_HEADER_END:
       if (input == '\n') {
-        state = 15;
+        state = PARSING_HEADER_BEGIN;
       } else {
         return false;
       }
       break;
-    case 16: {
-      state = 22;
+    case PARSING_BODY_BEGIN: {
+      state = PARSING_BODY;
       break;
     }
-    case 22:
+    case PARSING_BODY:
       req.body.push_back(input);
       break;
     default:
@@ -237,5 +276,29 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
     }
   }
 
+  for (HTTPParam &p : req.params) {
+    p.name = decodeURIComponent(p.name);
+    p.value = decodeURIComponent(p.value);
+  }
+
   return true;
+}
+
+std::string decodeURIComponent(std::string s) {
+  char *src = (char *)s.c_str();
+  std::string result;
+
+  while (*src) {
+    if (*src == '%' && src[1] && src[2] && isxdigit(src[1]) &&
+        isxdigit(src[2])) {
+      src[1] -= src[1] <= '9' ? '0' : (src[1] <= 'F' ? 'A' : 'a') - 10;
+      src[2] -= src[2] <= '9' ? '0' : (src[2] <= 'F' ? 'A' : 'a') - 10;
+      result.push_back(16 * src[1] + src[2]);
+      src += 3;
+      continue;
+    }
+    result.push_back(*src++);
+  }
+
+  return result;
 }

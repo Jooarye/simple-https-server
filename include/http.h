@@ -15,6 +15,11 @@ struct HTTPHeader {
   std::string value;
 };
 
+struct HTTPParam {
+  std::string name;
+  std::string value;
+};
+
 enum HTTPMethod {
   HTTP_NONE,
   HTTP_GET,
@@ -39,6 +44,7 @@ public:
   int major, minor;
 
   std::vector<HTTPHeader> headers;
+  std::vector<HTTPParam> params;
   std::string body;
 };
 
