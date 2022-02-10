@@ -276,6 +276,8 @@ bool parseHttpRequest(char *begin, HTTPRequest &req) {
     }
   }
 
+  req.fullResource = req.resource;
+
   for (HTTPParam &p : req.params) {
     p.name = decodeURIComponent(p.name);
     p.value = decodeURIComponent(p.value);

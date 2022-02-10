@@ -5,7 +5,7 @@
 class JSONRequest {
 public:
   HTTPMethod method;
-  std::string resource;
+  std::string resource, fullResource;
   int major, minor;
 
   std::vector<HTTPHeader> headers;

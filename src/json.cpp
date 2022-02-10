@@ -12,6 +12,7 @@ void JSONRequest::fromHTTPRequest(HTTPRequest &req) {
   this->params = req.params;
   this->headers = req.headers;
   this->resource = req.resource;
+  this->fullResource = req.fullResource;
   this->parsingSuccessfull = reader.parse(req.body, this->body);
 }
 

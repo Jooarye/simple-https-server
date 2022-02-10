@@ -8,14 +8,22 @@
 class APIHandler : public JSONHandler {
 public:
   void handleJsonRequest(JSONRequest &req, JSONResponse &res) {
-    res.body["first"] = "Bob";
-    res.body["last"] = "Maier";
-    res.body["age"] = 22;
-    res.body["city"] = "Berlin";
-    res.body["occupation"] = "Computer Sience Student";
+    res.body["method"] = getMethodName(req.method);
+    res.body["resource"]["endpoint"] = req.resource;
+    res.body["resource"]["full"] = req.fullResource;
+    res.body["version"]["major"] = req.major;
+    res.body["version"]["minor"] = req.minor;
 
     for (HTTPParam &param : req.params) {
-      res.body["test"][param.name] = param.value;
+      res.body["req"]["params"][param.name] = param.value;
+    }
+
+    for (HTTPHeader &header : req.headers) {
+      res.body["headers"][header.name] = header.value;
+    }
+
+    if (req.method == HTTP_POST) {
+      res.body["req"]["body"] = req.body;
     }
 
     res.code = HTTP_OK;
@@ -34,10 +42,14 @@ int main(int argc, char *argv[]) {
   BasicFileHandler fileHandler;
   APIHandler apiHandler;
 
+  HTTPRouter second;
+
+  second.addRoute("/v1", &apiHandler);
+
   router.addRoute("/day", &handler1);
   router.addRoute("/night", &handler2);
   router.addRoute("/static/", &fileHandler);
-  router.addRoute("/api", &apiHandler);
+  router.addRoute("/api/", &second);
 
   server.setHandler(&router);
   server.serveForever();
